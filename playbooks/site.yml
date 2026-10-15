@@ -1,0 +1,7 @@
+---
+- name: Configure all managed servers
+  hosts: all
+  become: true
+
+  roles:
+    - common
