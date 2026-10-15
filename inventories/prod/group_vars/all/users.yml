@@ -1,0 +1,9 @@
+---
+system_users:
+  - name: ronaldo
+    shell: /bin/bash
+    create_home: true
+    sudo: true
+    state: present
+    ssh_public_keys:
+      - ~/.ssh/id_ed25519.pub
