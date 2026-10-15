@@ -1,0 +1,10 @@
+# Managed by Ansible.
+# Manual changes will be overwritten.
+
+PermitRootLogin {{ 'yes' if ssh_permit_root_login else 'no' }}
+PasswordAuthentication {{ 'yes' if ssh_password_authentication else 'no' }}
+PubkeyAuthentication {{ 'yes' if ssh_pubkey_authentication else 'no' }}
+PermitEmptyPasswords {{ 'yes' if ssh_permit_empty_passwords else 'no' }}
+
+MaxAuthTries {{ ssh_max_auth_tries }}
+X11Forwarding {{ 'yes' if ssh_x11_forwarding else 'no' }}

@@ -1,0 +1,24 @@
+---
+- name: Safely configure SSH
+  block:
+    - name: Deploy SSH hardening configuration
+      ansible.builtin.template:
+        src: 99-ansible-hardening.conf.j2
+        dest: /etc/ssh/sshd_config.d/99-ansible-hardening.conf
+        owner: root
+        group: root
+        mode: "0644"
+        backup: true
+      register: ssh_hardening_config
+
+    - name: Validate SSH configuration
+      ansible.builtin.command:
+        cmd: /usr/sbin/sshd -t
+      changed_when: false
+      check_mode: false
+
+    - name: Reload SSH when configuration changed
+      ansible.builtin.systemd_service:
+        name: ssh
+        state: reloaded
+      when: ssh_hardening_config.changed
