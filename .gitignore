@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Ansible
+*.retry
+.ansible/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# Secrets
+*.vault-password
+vault-password*
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.swp
+*~
