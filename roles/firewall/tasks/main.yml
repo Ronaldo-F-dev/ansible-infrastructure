@@ -1,0 +1,37 @@
+---
+- name: Install UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: true
+  when:
+    - firewall_enabled | bool
+    - ansible_facts["os_family"] == "Debian"
+
+- name: Set default incoming firewall policy
+  community.general.ufw:
+    direction: incoming
+    policy: "{{ firewall_default_incoming_policy }}"
+  when: firewall_enabled | bool
+
+- name: Set default outgoing firewall policy
+  community.general.ufw:
+    direction: outgoing
+    policy: "{{ firewall_default_outgoing_policy }}"
+  when: firewall_enabled | bool
+
+- name: Allow configured firewall ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port | string }}"
+    proto: "{{ item.protocol | default('tcp') }}"
+    comment: "{{ item.comment | default(omit) }}"
+  loop: "{{ firewall_allowed_ports }}"
+  loop_control:
+    label: "{{ item.port }}/{{ item.protocol | default('tcp') }}"
+  when: firewall_enabled | bool
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+  when: firewall_enabled | bool
