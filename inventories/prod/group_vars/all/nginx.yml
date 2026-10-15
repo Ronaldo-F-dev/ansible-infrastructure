@@ -1,0 +1,8 @@
+---
+nginx_sites:
+  - name: ansible-demo
+    server_name: ansible.fr-host.fr
+    listen_port: 80
+    root: /var/www/ansible-demo
+    index: index.html
+
