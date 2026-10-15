@@ -30,14 +30,47 @@
   loop: "{{ nginx_sites }}"
   loop_control:
     label: "{{ item.name }}"
+  when: item.state | default('present') == 'present'
   notify: Reload Nginx
 
-- name: Enable Nginx sites
-  ansible.builtin.file:
-    src: "/etc/nginx/sites-available/{{ item.name }}"
-    dest: "/etc/nginx/sites-enabled/{{ item.name }}"
-    state: link
+- name: Check existing Nginx site configurations
+  ansible.builtin.stat:
+    path: "/etc/nginx/sites-available/{{ item.name }}"
   loop: "{{ nginx_sites }}"
   loop_control:
     label: "{{ item.name }}"
+  when: item.state | default('present') == 'present'
+  register: nginx_site_config_stats
+
+- name: Enable Nginx sites
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ item.item.name }}"
+    dest: "/etc/nginx/sites-enabled/{{ item.item.name }}"
+    state: link
+  loop: "{{ nginx_site_config_stats.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - not item.skipped | default(false)
+    - not ansible_check_mode or item.stat.exists
+  notify: Reload Nginx
+
+- name: Disable absent Nginx sites
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/{{ item.name }}"
+    state: absent
+  loop: "{{ nginx_sites }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.state | default('present') == 'absent'
+  notify: Reload Nginx
+
+- name: Remove absent Nginx site configurations
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-available/{{ item.name }}"
+    state: absent
+  loop: "{{ nginx_sites }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.state | default('present') == 'absent'
   notify: Reload Nginx
