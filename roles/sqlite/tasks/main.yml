@@ -1,0 +1,53 @@
+---
+- name: Install SQLite packages
+  ansible.builtin.apt:
+    name: "{{ sqlite_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure SQLite database directories exist
+  ansible.builtin.file:
+    path: "{{ item.path | dirname }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.directory_mode | default('0750') }}"
+  loop: "{{ sqlite_databases }}"
+  loop_control:
+    label: "{{ item.path | dirname }}"
+  when:
+    - item.state | default('present') == 'present'
+
+- name: Check existing SQLite database files
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop: "{{ sqlite_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: sqlite_database_files
+  check_mode: false
+
+- name: Ensure SQLite databases exist
+  ansible.builtin.command:
+    cmd: "sqlite3 {{ item.path }} 'PRAGMA user_version;'"
+    creates: "{{ item.path }}"
+  loop: "{{ sqlite_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+
+- name: Ensure SQLite database ownership and permissions
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: file
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode | default('0640') }}"
+  loop: "{{ sqlite_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+    index_var: sqlite_database_index
+  when:
+    - item.state | default('present') == 'present'
+    - not ansible_check_mode or sqlite_database_files.results[sqlite_database_index].stat.exists

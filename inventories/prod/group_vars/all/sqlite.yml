@@ -1,0 +1,9 @@
+---
+sqlite_databases:
+  - name: ansible_demo
+    path: /var/lib/ansible-demo/ansible_demo.db
+    owner: ronaldo
+    group: ronaldo
+    directory_mode: "0750"
+    mode: "0640"
+    state: present

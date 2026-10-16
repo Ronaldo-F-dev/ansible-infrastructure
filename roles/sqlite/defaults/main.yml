@@ -1,0 +1,5 @@
+---
+sqlite_packages:
+  - sqlite3
+
+sqlite_databases: []

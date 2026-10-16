@@ -1,0 +1,7 @@
+---
+- name: Configure SQLite
+  hosts: all
+  become: true
+
+  roles:
+    - sqlite
