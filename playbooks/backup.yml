@@ -1,0 +1,7 @@
+---
+- name: Configure database backups
+  hosts: all
+  become: true
+
+  roles:
+    - backup

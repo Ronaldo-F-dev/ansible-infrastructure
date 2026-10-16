@@ -1,0 +1,98 @@
+---
+- name: Ensure backup base directory exists
+  ansible.builtin.file:
+    path: "{{ backup_base_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Ensure PostgreSQL backup directory exists
+  ansible.builtin.file:
+    path: "{{ backup_base_dir }}/postgresql"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: backup_postgresql_enabled
+
+- name: Ensure MySQL backup directory exists
+  ansible.builtin.file:
+    path: "{{ backup_base_dir }}/mysql"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: backup_mysql_enabled
+
+- name: Ensure SQLite backup directory exists
+  ansible.builtin.file:
+    path: "{{ backup_base_dir }}/sqlite"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: backup_sqlite_enabled
+
+- name: Deploy PostgreSQL backup script
+  ansible.builtin.template:
+    src: backup-postgresql.sh.j2
+    dest: /usr/local/sbin/ansible-backup-postgresql
+    owner: root
+    group: root
+    mode: "0750"
+  when: backup_postgresql_enabled
+
+- name: Deploy MySQL backup script
+  ansible.builtin.template:
+    src: backup-mysql.sh.j2
+    dest: /usr/local/sbin/ansible-backup-mysql
+    owner: root
+    group: root
+    mode: "0750"
+  when: backup_mysql_enabled
+
+- name: Deploy SQLite backup script
+  ansible.builtin.template:
+    src: backup-sqlite.sh.j2
+    dest: /usr/local/sbin/ansible-backup-sqlite
+    owner: root
+    group: root
+    mode: "0750"
+  when: backup_sqlite_enabled
+
+- name: Deploy database backup systemd service
+  ansible.builtin.template:
+    src: ansible-database-backup.service.j2
+    dest: /etc/systemd/system/ansible-database-backup.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Deploy database backup systemd timer
+  ansible.builtin.template:
+    src: ansible-database-backup.timer.j2
+    dest: /etc/systemd/system/ansible-database-backup.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+  when: backup_timer_enabled
+
+- name: Check whether database backup timer already exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system/ansible-database-backup.timer
+  register: backup_timer_unit
+  check_mode: false
+  when: backup_timer_enabled
+
+- name: Ensure database backup timer is enabled and started
+  ansible.builtin.systemd_service:
+    name: ansible-database-backup.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when:
+    - backup_timer_enabled
+    - not ansible_check_mode or backup_timer_unit.stat.exists

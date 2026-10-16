@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+BACKUP_DIR="{{ backup_base_dir }}/sqlite"
+RETENTION_DAYS="{{ backup_retention_days }}"
+TIMESTAMP="$(date -u '+%Y%m%dT%H%M%SZ')"
+
+{% for database in backup_sqlite_databases %}
+DATABASE="{{ database.name }}"
+SOURCE_FILE="{{ database.path }}"
+FINAL_FILE="${BACKUP_DIR}/${DATABASE}_${TIMESTAMP}.db"
+TEMP_FILE="${FINAL_FILE}.tmp"
+
+echo "Backing up SQLite database: ${DATABASE}"
+
+if [ ! -f "${SOURCE_FILE}" ]; then
+    echo "SQLite database not found: ${SOURCE_FILE}" >&2
+    exit 1
+fi
+
+rm -f "${TEMP_FILE}"
+
+if sqlite3 "${SOURCE_FILE}" ".backup '${TEMP_FILE}'"; then
+
+    INTEGRITY_RESULT="$(sqlite3 "${TEMP_FILE}" 'PRAGMA integrity_check;')"
+
+    if [ "${INTEGRITY_RESULT}" != "ok" ]; then
+        echo "Backup integrity check failed: ${DATABASE}" >&2
+        rm -f "${TEMP_FILE}"
+        exit 1
+    fi
+
+    mv "${TEMP_FILE}" "${FINAL_FILE}"
+    chmod 0600 "${FINAL_FILE}"
+
+    echo "Backup completed: ${FINAL_FILE}"
+else
+    rm -f "${TEMP_FILE}"
+    echo "Backup failed: ${DATABASE}" >&2
+    exit 1
+fi
+
+{% endfor %}
+
+find "${BACKUP_DIR}" \
+    -type f \
+    -name '*.db' \
+    -mtime "+${RETENTION_DAYS}" \
+    -delete

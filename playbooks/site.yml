@@ -15,4 +15,5 @@
     - postgresql
     - mysql
     - sqlite
+    - backup
     - nginx

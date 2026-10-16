@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+BACKUP_DIR="{{ backup_base_dir }}/postgresql"
+RETENTION_DAYS="{{ backup_retention_days }}"
+TIMESTAMP="$(date -u '+%Y%m%dT%H%M%SZ')"
+
+{% for database in backup_postgresql_databases %}
+DATABASE="{{ database }}"
+FINAL_FILE="${BACKUP_DIR}/${DATABASE}_${TIMESTAMP}.dump"
+TEMP_FILE="${FINAL_FILE}.tmp"
+
+echo "Backing up PostgreSQL database: ${DATABASE}"
+
+rm -f "${TEMP_FILE}"
+
+if runuser -u postgres -- pg_dump \
+    --format=custom \
+    "${DATABASE}" > "${TEMP_FILE}"; then
+
+    pg_restore --list "${TEMP_FILE}" > /dev/null
+
+    mv "${TEMP_FILE}" "${FINAL_FILE}"
+    chmod 0600 "${FINAL_FILE}"
+
+    echo "Backup completed: ${FINAL_FILE}"
+else
+    rm -f "${TEMP_FILE}"
+    echo "Backup failed: ${DATABASE}" >&2
+    exit 1
+fi
+
+{% endfor %}
+
+find "${BACKUP_DIR}" \
+    -type f \
+    -name '*.dump' \
+    -mtime "+${RETENTION_DAYS}" \
+    -delete

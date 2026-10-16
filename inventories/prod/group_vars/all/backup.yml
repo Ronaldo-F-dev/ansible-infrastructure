@@ -1,0 +1,17 @@
+---
+backup_base_dir: /var/backups/ansible
+backup_retention_days: 7
+
+backup_postgresql_enabled: true
+backup_mysql_enabled: true
+backup_sqlite_enabled: true
+
+backup_postgresql_databases:
+  - ansible_demo
+
+backup_mysql_databases:
+  - ansible_demo
+
+backup_sqlite_databases:
+  - name: ansible_demo
+    path: /var/lib/ansible-demo/ansible_demo.db

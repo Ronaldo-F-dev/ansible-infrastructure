@@ -1,0 +1,24 @@
+[Unit]
+Description=Ansible managed database backups
+{% if backup_postgresql_enabled %}
+After=postgresql.service
+Wants=postgresql.service
+{% endif %}
+{% if backup_mysql_enabled %}
+After=mysql.service
+Wants=mysql.service
+{% endif %}
+
+[Service]
+Type=oneshot
+User=root
+
+{% if backup_postgresql_enabled %}
+ExecStart=/usr/local/sbin/ansible-backup-postgresql
+{% endif %}
+{% if backup_mysql_enabled %}
+ExecStart=/usr/local/sbin/ansible-backup-mysql
+{% endif %}
+{% if backup_sqlite_enabled %}
+ExecStart=/usr/local/sbin/ansible-backup-sqlite
+{% endif %}

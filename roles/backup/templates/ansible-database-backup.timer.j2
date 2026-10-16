@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Ansible managed database backups daily
+
+[Timer]
+OnCalendar={{ backup_timer_on_calendar }}
+Persistent={{ backup_timer_persistent | ternary('true', 'false') }}
+Unit=ansible-database-backup.service
+
+[Install]
+WantedBy=timers.target

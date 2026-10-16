@@ -1,0 +1,16 @@
+---
+backup_base_dir: /var/backups/ansible
+
+backup_retention_days: 7
+
+backup_postgresql_enabled: false
+backup_mysql_enabled: false
+backup_sqlite_enabled: false
+
+backup_postgresql_databases: []
+backup_mysql_databases: []
+backup_sqlite_databases: []
+
+backup_timer_enabled: true
+backup_timer_on_calendar: "*-*-* 02:00:00"
+backup_timer_persistent: true
