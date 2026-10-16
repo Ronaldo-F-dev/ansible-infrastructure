@@ -8,5 +8,5 @@
     - users
     - ssh
     - firewall
+    - docker
     - nginx
-    
