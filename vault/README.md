@@ -59,4 +59,49 @@ vault-password.txt
 production.vault-password
 ```
 
+
+
 CI/CD systems should obtain the Vault password from their secure secret-management mechanism rather than storing it in the repository.
+
+
+## MySQL Secrets
+
+MySQL application passwords are stored in the encrypted production Vault.
+
+Expected structure:
+
+```yaml
+vault_mysql_users:
+  application_user:
+    password: "secret"
+
+The MySQL role retrieves passwords dynamically using the configured MySQL username.
+For example, an inventory user:
+mysql_users:
+  - name: application_user
+    host: localhost
+    database: application_database
+    privileges: "ALL"
+    state: present
+
+uses the corresponding Vault entry:
+vault_mysql_users.application_user.password
+
+PostgreSQL and MySQL credentials should use different passwords, even when the application username is the same.
+Never store database passwords directly in inventory variables, role defaults, playbooks, or documentation.
+
+Le point important est que nous séparons maintenant clairement :
+
+```text
+inventories/
+│
+├── postgresql.yml ─── configuration non secrète
+└── mysql.yml      ─── configuration non secrète
+
+vault/prod.yml
+│
+├── vault_postgresql_users
+│      └── ansible_demo_app.password
+│
+└── vault_mysql_users
+       └── ansible_demo_app.password

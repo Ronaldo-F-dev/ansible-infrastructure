@@ -13,4 +13,5 @@
     - firewall
     - docker
     - postgresql
+    - mysql
     - nginx

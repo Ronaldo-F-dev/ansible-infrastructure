@@ -1,0 +1,10 @@
+---
+mysql_packages:
+  - mysql-server
+  - python3-pymysql
+
+mysql_service_name: mysql
+
+mysql_databases: []
+
+mysql_users: []

@@ -1,0 +1,11 @@
+---
+mysql_databases:
+  - name: ansible_demo
+    state: present
+
+mysql_users:
+  - name: ansible_demo_app
+    host: localhost
+    database: ansible_demo
+    privileges: "ALL"
+    state: present

@@ -75,6 +75,7 @@ More detailed documentation is maintained close to the component it describes.
 | Docker | [`roles/docker/README.md`](roles/docker/README.md) |
 | PostgreSQL | [`roles/postgresql/README.md`](roles/postgresql/README.md) |
 | Ansible Vault | [`vault/README.md`](vault/README.md) |
+| MySQL | [`roles/mysql/README.md`](roles/mysql/README.md) | MySQL installation, databases, users, privileges, security, and check mode |
 
 Role-specific behavior, variables, requirements, security considerations, and examples should be documented in the corresponding role README rather than duplicated in this file.
 
@@ -313,6 +314,22 @@ Application roles are created before databases so databases can safely reference
 Detailed documentation:
 
 [`roles/postgresql/README.md`](roles/postgresql/README.md)
+
+### MySQL
+
+The `mysql` role installs and manages MySQL, including:
+
+- MySQL server packages
+- MySQL service state
+- Databases
+- Application users
+- Database-scoped privileges
+- Vault-backed application passwords
+- Local administration through the MySQL Unix socket
+
+MySQL is currently configured for local access only and is not exposed through the firewall.
+
+See [`roles/mysql/README.md`](roles/mysql/README.md) for detailed usage and configuration.
 
 ## Variables
 
