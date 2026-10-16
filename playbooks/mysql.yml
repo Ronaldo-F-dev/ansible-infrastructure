@@ -3,8 +3,5 @@
   hosts: all
   become: true
 
-  vars_files:
-    - ../vault/prod.yml
-
   roles:
     - mysql
