@@ -1,0 +1,9 @@
+---
+postgresql_users:
+  - name: ansible_demo_app
+    state: present
+
+postgresql_databases:
+  - name: ansible_demo
+    owner: ansible_demo_app
+    state: present

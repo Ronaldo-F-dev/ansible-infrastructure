@@ -1,0 +1,45 @@
+---
+- name: Install PostgreSQL packages
+  ansible.builtin.apt:
+    name: "{{ postgresql_packages }}"
+    state: present
+    update_cache: true
+
+- name: Check whether PostgreSQL is already installed
+  ansible.builtin.command:
+    cmd: psql --version
+  register: postgresql_installation_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Ensure PostgreSQL service is enabled and running
+  ansible.builtin.systemd_service:
+    name: "{{ postgresql_service_name }}"
+    enabled: true
+    state: started
+  when:
+    - not ansible_check_mode or postgresql_installation_check.rc == 0
+
+- name: Ensure PostgreSQL users exist
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ vault_postgresql_users[item.name].password }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ postgresql_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+  become_user: postgres
+  no_log: true
+
+- name: Ensure PostgreSQL databases exist
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ postgresql_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: true
+  become_user: postgres

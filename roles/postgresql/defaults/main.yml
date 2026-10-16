@@ -1,0 +1,11 @@
+---
+postgresql_packages:
+  - postgresql
+  - postgresql-contrib
+  - python3-psycopg2
+
+postgresql_service_name: postgresql
+
+postgresql_databases: []
+
+postgresql_users: []

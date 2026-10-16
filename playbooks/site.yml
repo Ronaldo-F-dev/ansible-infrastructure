@@ -3,10 +3,14 @@
   hosts: all
   become: true
 
+  vars_files:
+    - ../vault/prod.yml
+
   roles:
     - common
     - users
     - ssh
     - firewall
     - docker
+    - postgresql
     - nginx
