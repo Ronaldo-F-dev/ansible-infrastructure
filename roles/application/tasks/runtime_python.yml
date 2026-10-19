@@ -34,6 +34,7 @@
   loop: "{{ applications }}"
   loop_control:
     label: "{{ item.name }}"
+  register: python_dependency_installations
   when:
     - item.state | default('present') == 'present'
     - item.runtime is defined

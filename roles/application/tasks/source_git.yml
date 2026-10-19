@@ -8,6 +8,7 @@
   loop: "{{ applications }}"
   loop_control:
     label: "{{ item.name }}"
+  register: application_git_deployments
   when:
     - item.state | default('present') == 'present'
     - item.source is defined

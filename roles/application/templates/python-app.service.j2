@@ -13,6 +13,7 @@ WorkingDirectory={{ item.deploy_path }}
 ExecStart={{ item.deploy_path }}/.venv/bin/gunicorn \
   --workers {{ item.runtime.workers | default(2) }} \
   --bind {{ item.runtime.bind }} \
+  --no-control-socket \
   {{ item.runtime.module }}
 
 Restart=always

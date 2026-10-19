@@ -4,16 +4,3 @@
     daemon_reload: true
   when:
     - not ansible_check_mode
-
-- name: Restart Python applications
-  ansible.builtin.systemd_service:
-    name: "{{ item.name }}"
-    state: restarted
-  loop: "{{ applications }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when:
-    - not ansible_check_mode
-    - item.state | default('present') == 'present'
-    - item.runtime is defined
-    - item.runtime.type == 'python'
