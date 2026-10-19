@@ -84,3 +84,21 @@
         | list
         | length
       ) > 0
+
+- name: Wait for Python applications to become healthy
+  ansible.builtin.uri:
+    url: "http://{{ item.runtime.bind }}/health"
+    method: GET
+    status_code: 200
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: python_health_check
+  retries: 5
+  delay: 2
+  until: python_health_check.status == 200
+  when:
+    - not ansible_check_mode
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'python'
