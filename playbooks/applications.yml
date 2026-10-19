@@ -2,6 +2,7 @@
 - name: Deploy applications
   hosts: all
   become: true
+  gather_facts: false
 
   roles:
     - application

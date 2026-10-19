@@ -84,3 +84,12 @@
         | list
         | length
       ) > 0
+      or
+      (
+        application_current_release_links.results
+        | default([])
+        | selectattr('item.item.name', 'equalto', item.name)
+        | selectattr('changed', 'equalto', true)
+        | list
+        | length
+      ) > 0

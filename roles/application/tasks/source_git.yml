@@ -64,6 +64,7 @@
   loop: "{{ application_git_revisions.results }}"
   loop_control:
     label: "{{ item.item.name }}"
+  register: application_current_release_links
   when:
     - item.stdout is defined
     - item.rc is defined
