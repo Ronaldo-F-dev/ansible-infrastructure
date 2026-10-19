@@ -1,4 +1,19 @@
 ---
+- name: Resolve previous release for Python application
+  ansible.builtin.set_fact:
+    python_previous_release: >-
+      {{
+        (
+          application_previous_releases.results
+          | default([])
+          | selectattr('item.item.name', 'equalto', application.name)
+          | map(attribute='stdout')
+          | select('defined')
+          | list
+          | first
+        ) | default('')
+      }}
+
 - name: Check Python application health
   block:
     - name: Wait for Python application to become healthy
@@ -13,6 +28,37 @@
       until: python_health_result.status == 200
 
   rescue:
+
+    - name: Roll back current symlink to previous release
+      ansible.builtin.file:
+        src: "{{ python_previous_release }}"
+        dest: "{{ application.deploy_path }}/{{ application_current_link_name }}"
+        state: link
+        force: true
+      when:
+        - python_previous_release | length > 0
+
+    - name: Restart Python application after rollback
+      ansible.builtin.systemd_service:
+        name: "{{ application.name }}"
+        state: restarted
+      when:
+        - python_previous_release | length > 0
+
+    - name: Wait for rolled back Python application to become healthy
+      ansible.builtin.uri:
+        url: "http://{{ application.runtime.bind }}{{ application.runtime.health_path | default('/health') }}"
+        method: GET
+        status_code: 200
+        return_content: false
+      register: python_rollback_health_result
+      retries: 5
+      delay: 2
+      until: python_rollback_health_result.status == 200
+      when:
+        - python_previous_release | length > 0
+
+
     - name: Get Python application service status
       ansible.builtin.command:
         cmd: "systemctl status {{ application.name }} --no-pager"
@@ -38,8 +84,8 @@
     - name: Fail deployment because health check failed
       ansible.builtin.fail:
         msg: >-
-          Application {{ application.name }} failed its health check
-          at http://{{ application.runtime.bind }}{{ application.runtime.health_path | default('/health') }}.
+          Application {{ application.name }} failed its health check.
+          Rollback to {{ python_previous_release | default('unknown') }} was attempted.
 
   always:
     - name: Report completion of Python application health validation

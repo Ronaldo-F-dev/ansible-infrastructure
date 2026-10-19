@@ -70,7 +70,7 @@
       (
         python_dependency_installations.results
         | default([])
-        | selectattr('item.name', 'equalto', item.name)
+        | selectattr('item.item.name', 'equalto', item.name)
         | selectattr('changed', 'equalto', true)
         | list
         | length

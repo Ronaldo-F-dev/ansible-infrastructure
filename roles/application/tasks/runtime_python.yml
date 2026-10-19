@@ -15,27 +15,38 @@
     - item.runtime is defined
     - item.runtime.type == 'python'
 
-- name: Create Python virtual environment
+- name: Create Python virtual environment for release
   ansible.builtin.command:
-    cmd: "python3 -m venv {{ item.deploy_path }}/.venv"
-    creates: "{{ item.deploy_path }}/.venv/bin/python"
-  loop: "{{ applications }}"
+    cmd: >-
+      python3 -m venv
+      {{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}/.venv
+    creates: >-
+      {{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}/.venv/bin/python
+  loop: "{{ application_git_revisions.results }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.item.name }}"
   when:
-    - item.state | default('present') == 'present'
-    - item.runtime is defined
-    - item.runtime.type == 'python'
+    - item.stdout is defined
+    - item.rc is defined
+    - item.rc == 0
+    - item.item.state | default('present') == 'present'
+    - item.item.runtime is defined
+    - item.item.runtime.type == 'python'
 
-- name: Install Python application dependencies
+- name: Install Python dependencies for release
   ansible.builtin.pip:
-    requirements: "{{ item.deploy_path }}/requirements.txt"
-    virtualenv: "{{ item.deploy_path }}/.venv"
-  loop: "{{ applications }}"
+    requirements: >-
+      {{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}/requirements.txt
+    virtualenv: >-
+      {{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}/.venv
+  loop: "{{ application_git_revisions.results }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.item.name }}"
   register: python_dependency_installations
   when:
-    - item.state | default('present') == 'present'
-    - item.runtime is defined
-    - item.runtime.type == 'python'
+    - item.stdout is defined
+    - item.rc is defined
+    - item.rc == 0
+    - item.item.state | default('present') == 'present'
+    - item.item.runtime is defined
+    - item.item.runtime.type == 'python'

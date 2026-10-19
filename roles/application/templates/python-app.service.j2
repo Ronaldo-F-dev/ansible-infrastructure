@@ -10,7 +10,7 @@ Group={{ item.group }}
 
 WorkingDirectory={{ item.deploy_path }}/{{ application_current_link_name }}
 
-ExecStart={{ item.deploy_path }}/.venv/bin/gunicorn \
+ExecStart={{ item.deploy_path }}/{{ application_current_link_name }}/.venv/bin/gunicorn \
   --workers {{ item.runtime.workers | default(2) }} \
   --bind {{ item.runtime.bind }} \
   --no-control-socket \
