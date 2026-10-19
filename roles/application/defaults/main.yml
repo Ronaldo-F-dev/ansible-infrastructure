@@ -4,3 +4,6 @@ applications: []
 application_base_dir: /opt/apps
 application_owner: root
 application_group: root
+application_releases_dir_name: releases
+application_current_link_name: current
+application_releases_to_keep: 5

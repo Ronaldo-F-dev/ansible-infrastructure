@@ -58,3 +58,17 @@
   when:
     - not ansible_check_mode
       or item.ansible_facts.getent_passwd[item.item.user] is not none
+
+- name: Ensure application releases directories exist
+  ansible.builtin.file:
+    path: "{{ item.item.deploy_path }}/{{ application_releases_dir_name }}"
+    state: directory
+    owner: root
+    group: "{{ item.item.group }}"
+    mode: "0750"
+  loop: "{{ application_user_checks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - not ansible_check_mode
+      or item.ansible_facts.getent_passwd[item.item.user] is not none

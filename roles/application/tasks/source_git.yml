@@ -13,3 +13,30 @@
     - item.state | default('present') == 'present'
     - item.source is defined
     - item.source.type == 'git'
+
+- name: Get deployed Git revision
+  ansible.builtin.command:
+    cmd: "git -C {{ item.deploy_path }} rev-parse HEAD"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: application_git_revisions
+  changed_when: false
+  when:
+    - item.state | default('present') == 'present'
+    - item.source is defined
+    - item.source.type == 'git'
+
+- name: Create immutable Git release
+  ansible.builtin.git:
+    repo: "{{ item.item.source.repo }}"
+    dest: "{{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}"
+    version: "{{ item.stdout }}"
+    update: false
+  loop: "{{ application_git_revisions.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - item.stdout is defined
+    - item.rc is defined
+    - item.rc == 0
