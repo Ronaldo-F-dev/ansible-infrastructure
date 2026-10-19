@@ -1,0 +1,10 @@
+---
+docker_enabled: false
+
+postgresql_enabled: false
+mysql_enabled: false
+sqlite_enabled: false
+backup_enabled: false
+
+application_enabled: true
+nginx_enabled: true

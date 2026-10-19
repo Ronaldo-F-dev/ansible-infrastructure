@@ -4,13 +4,31 @@
   become: true
 
   roles:
-    - common
-    - users
-    - ssh
-    - firewall
-    - docker
-    - postgresql
-    - mysql
-    - sqlite
-    - backup
-    - nginx
+    - role: common
+
+    - role: users
+
+    - role: ssh
+
+    - role: firewall
+
+    - role: docker
+      when: docker_enabled | default(false) | bool
+
+    - role: postgresql
+      when: postgresql_enabled | default(false) | bool
+
+    - role: mysql
+      when: mysql_enabled | default(false) | bool
+
+    - role: sqlite
+      when: sqlite_enabled | default(false) | bool
+
+    - role: backup
+      when: backup_enabled | default(false) | bool
+
+    - role: application
+      when: application_enabled | default(false) | bool
+
+    - role: nginx
+      when: nginx_enabled | default(false) | bool
