@@ -1,0 +1,6 @@
+---
+applications: []
+
+application_base_dir: /opt/apps
+application_owner: root
+application_group: root

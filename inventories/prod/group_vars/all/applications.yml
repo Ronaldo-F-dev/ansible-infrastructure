@@ -1,0 +1,7 @@
+---
+applications:
+  - name: ansible-demo-app
+    user: ansible-demo-app
+    group: ansible-demo-app
+    deploy_path: /opt/apps/ansible-demo-app
+    state: present
