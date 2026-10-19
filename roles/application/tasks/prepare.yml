@@ -1,0 +1,60 @@
+---
+- name: Ensure application base directory exists
+  ansible.builtin.file:
+    path: "{{ application_base_dir }}"
+    state: directory
+    owner: "{{ application_owner }}"
+    group: "{{ application_group }}"
+    mode: "0755"
+
+- name: Ensure application groups exist
+  ansible.builtin.group:
+    name: "{{ item.group }}"
+    state: present
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+
+- name: Ensure application users exist
+  ansible.builtin.user:
+    name: "{{ item.user }}"
+    group: "{{ item.group }}"
+    home: "{{ item.deploy_path }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+    state: present
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+
+- name: Check existing application users
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ item.user }}"
+    fail_key: false
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: application_user_checks
+  check_mode: false
+  changed_when: false
+  when:
+    - item.state | default('present') == 'present'
+
+- name: Ensure application directories exist
+  ansible.builtin.file:
+    path: "{{ item.item.deploy_path }}"
+    state: directory
+    owner: root
+    group: "{{ item.item.group }}"
+    mode: "0750"
+  loop: "{{ application_user_checks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - not ansible_check_mode
+      or item.ansible_facts.getent_passwd[item.item.user] is not none

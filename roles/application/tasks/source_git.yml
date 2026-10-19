@@ -1,0 +1,14 @@
+---
+- name: Deploy application source from Git
+  ansible.builtin.git:
+    repo: "{{ item.source.repo }}"
+    dest: "{{ item.deploy_path }}"
+    version: "{{ item.source.version | default('main') }}"
+    update: true
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.source is defined
+    - item.source.type == 'git'

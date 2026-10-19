@@ -1,0 +1,40 @@
+---
+- name: Install Python runtime packages
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: true
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'python'
+
+- name: Create Python virtual environment
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ item.deploy_path }}/.venv"
+    creates: "{{ item.deploy_path }}/.venv/bin/python"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'python'
+
+- name: Install Python application dependencies
+  ansible.builtin.pip:
+    requirements: "{{ item.deploy_path }}/requirements.txt"
+    virtualenv: "{{ item.deploy_path }}/.venv"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'python'

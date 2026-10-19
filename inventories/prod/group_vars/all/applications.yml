@@ -4,4 +4,21 @@ applications:
     user: ansible-demo-app
     group: ansible-demo-app
     deploy_path: /opt/apps/ansible-demo-app
+
+    source:
+      type: git
+      repo: "https://github.com/Ronaldo-F-dev/ansible-demo-app.git"
+      version: main
+
+    runtime:
+      type: python
+      module: app:app
+      bind: 127.0.0.1:8000
+      workers: 2
+
     state: present
+
+    web:
+      enabled: true
+      server_name: ansible-demo.local
+      upstream: 127.0.0.1:8000

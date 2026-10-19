@@ -1,0 +1,46 @@
+---
+- name: Check existing Python systemd service units
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ item.name }}.service"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: python_service_unit_checks
+  check_mode: false
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'python'
+
+- name: Install Python application systemd service
+  ansible.builtin.template:
+    src: python-app.service.j2
+    dest: "/etc/systemd/system/{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'python'
+  notify:
+    - Reload systemd
+    - Restart Python applications
+
+- name: Ensure Python application service is enabled and running
+  ansible.builtin.systemd_service:
+    name: "{{ item.item.name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop: "{{ python_service_unit_checks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - item.item.state | default('present') == 'present'
+    - item.item.runtime is defined
+    - item.item.runtime.type == 'python'
+    - not ansible_check_mode or item.stat.exists
