@@ -40,3 +40,17 @@
     - item.stdout is defined
     - item.rc is defined
     - item.rc == 0
+
+- name: Point current symlink to deployed release
+  ansible.builtin.file:
+    src: "{{ application_releases_dir_name }}/{{ item.stdout }}"
+    dest: "{{ item.item.deploy_path }}/{{ application_current_link_name }}"
+    state: link
+    force: true
+  loop: "{{ application_git_revisions.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - item.stdout is defined
+    - item.rc is defined
+    - item.rc == 0
