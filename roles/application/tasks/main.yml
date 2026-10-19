@@ -10,3 +10,15 @@
 
 - name: Configure Python application services
   ansible.builtin.include_tasks: service_python.yml
+
+- name: Validate Python application health
+  ansible.builtin.include_tasks: health_python.yml
+  loop: "{{ applications }}"
+  loop_control:
+    loop_var: application
+    label: "{{ application.name }}"
+  when:
+    - not ansible_check_mode
+    - application.state | default('present') == 'present'
+    - application.runtime is defined
+    - application.runtime.type == 'python'

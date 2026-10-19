@@ -1,0 +1,47 @@
+---
+- name: Check Python application health
+  block:
+    - name: Wait for Python application to become healthy
+      ansible.builtin.uri:
+        url: "http://{{ application.runtime.bind }}{{ application.runtime.health_path | default('/health') }}"
+        method: GET
+        status_code: 200
+        return_content: false
+      register: python_health_result
+      retries: 5
+      delay: 2
+      until: python_health_result.status == 200
+
+  rescue:
+    - name: Get Python application service status
+      ansible.builtin.command:
+        cmd: "systemctl status {{ application.name }} --no-pager"
+      register: python_service_status
+      changed_when: false
+      failed_when: false
+
+    - name: Get recent Python application logs
+      ansible.builtin.command:
+        cmd: "journalctl -u {{ application.name }} -n 30 --no-pager"
+      register: python_service_logs
+      changed_when: false
+      failed_when: false
+
+    - name: Display Python application service status
+      ansible.builtin.debug:
+        var: python_service_status.stdout_lines
+
+    - name: Display recent Python application logs
+      ansible.builtin.debug:
+        var: python_service_logs.stdout_lines
+
+    - name: Fail deployment because health check failed
+      ansible.builtin.fail:
+        msg: >-
+          Application {{ application.name }} failed its health check
+          at http://{{ application.runtime.bind }}{{ application.runtime.health_path | default('/health') }}.
+
+  always:
+    - name: Report completion of Python application health validation
+      ansible.builtin.debug:
+        msg: "Health validation completed for {{ application.name }}"
