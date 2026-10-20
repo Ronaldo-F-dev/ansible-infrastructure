@@ -1,0 +1,15 @@
+---
+- name: Initialize application environment change tracking
+  ansible.builtin.set_fact:
+    application_environment_changes: {}
+
+- name: Configure environment for each application
+  ansible.builtin.include_tasks: environment_app.yml
+  loop: "{{ applications }}"
+  loop_control:
+    loop_var: application
+    label: "{{ application.name }}"
+  when:
+    - application.state | default('present') == 'present'
+    - application.environment is defined
+    - application.environment | length > 0

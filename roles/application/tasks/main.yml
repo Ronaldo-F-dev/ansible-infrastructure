@@ -11,6 +11,9 @@
 - name: Configure Node.js application runtimes
   ansible.builtin.include_tasks: runtime_node.yml
 
+- name: Configure application environments
+  ansible.builtin.include_tasks: environment.yml
+
 - name: Activate prepared application releases
   ansible.builtin.include_tasks: activate_release.yml
 

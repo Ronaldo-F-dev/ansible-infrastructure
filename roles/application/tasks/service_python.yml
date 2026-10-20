@@ -93,3 +93,8 @@
         | list
         | length
       ) > 0
+      or
+      (
+        (application_environment_changes | default({})).get(item.name, false)
+        | bool
+      )

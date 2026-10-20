@@ -1,0 +1,31 @@
+---
+- name: Resolve deployed release for environment
+  ansible.builtin.set_fact:
+    application_environment_release: >-
+      {{
+        application_git_revisions.results
+        | selectattr('item.name', 'equalto', application.name)
+        | map(attribute='stdout')
+        | first
+      }}
+
+- name: Write application environment file
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: >-
+      {{ application.deploy_path }}/{{ application_releases_dir_name }}/{{ application_environment_release }}/.env
+    owner: "{{ application.user }}"
+    group: "{{ application.group }}"
+    mode: "0600"
+  register: application_environment_file
+  no_log: true
+
+- name: Track application environment changes
+  ansible.builtin.set_fact:
+    application_environment_changes: >-
+      {{
+        application_environment_changes
+        | combine({
+            application.name: application_environment_file.changed | default(false)
+          })
+      }}
