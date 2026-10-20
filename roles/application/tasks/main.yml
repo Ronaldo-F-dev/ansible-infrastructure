@@ -25,3 +25,5 @@
     - application.state | default('present') == 'present'
     - application.runtime is defined
     - application.runtime.type == 'python'
+- name: Clean old application releases
+  ansible.builtin.include_tasks: cleanup_releases.yml
