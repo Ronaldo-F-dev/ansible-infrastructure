@@ -8,6 +8,9 @@
 - name: Configure Python application runtimes
   ansible.builtin.include_tasks: runtime_python.yml
 
+- name: Activate prepared application releases
+  ansible.builtin.include_tasks: activate_release.yml
+
 - name: Configure Python application services
   ansible.builtin.include_tasks: service_python.yml
 
