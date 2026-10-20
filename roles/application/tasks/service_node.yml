@@ -1,0 +1,104 @@
+---
+- name: Check existing Node.js systemd service units
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ item.name }}.service"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: node_service_unit_checks
+  check_mode: false
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'node'
+
+- name: Install Node.js application systemd service
+  ansible.builtin.template:
+    src: node-app.service.j2
+    dest: "/etc/systemd/system/{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: node_service_templates
+  when:
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'node'
+  notify:
+    - Reload systemd
+
+- name: Ensure Node.js application service is enabled and running
+  ansible.builtin.systemd_service:
+    name: "{{ item.item.name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop: "{{ node_service_unit_checks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - item.item.state | default('present') == 'present'
+    - item.item.runtime is defined
+    - item.item.runtime.type == 'node'
+    - not ansible_check_mode or item.stat.exists
+
+- name: Restart Node.js applications when deployment changed
+  ansible.builtin.systemd_service:
+    name: "{{ item.name }}"
+    state: restarted
+  loop: "{{ applications }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - not ansible_check_mode
+    - item.state | default('present') == 'present'
+    - item.runtime is defined
+    - item.runtime.type == 'node'
+    - >
+      (
+        application_git_deployments.results
+        | default([])
+        | selectattr('item.name', 'equalto', item.name)
+        | selectattr('changed', 'equalto', true)
+        | list
+        | length
+      ) > 0
+      or
+      (
+        node_dependency_installations.results
+        | default([])
+        | selectattr('item.item.name', 'equalto', item.name)
+        | selectattr('changed', 'equalto', true)
+        | list
+        | length
+      ) > 0
+      or
+      (
+        node_build_results.results
+        | default([])
+        | selectattr('item.item.name', 'equalto', item.name)
+        | selectattr('changed', 'equalto', true)
+        | list
+        | length
+      ) > 0
+      or
+      (
+        node_service_templates.results
+        | default([])
+        | selectattr('item.name', 'equalto', item.name)
+        | selectattr('changed', 'equalto', true)
+        | list
+        | length
+      ) > 0
+      or
+      (
+        application_current_release_links.results
+        | default([])
+        | selectattr('item.item.name', 'equalto', item.name)
+        | selectattr('changed', 'equalto', true)
+        | list
+        | length
+      ) > 0

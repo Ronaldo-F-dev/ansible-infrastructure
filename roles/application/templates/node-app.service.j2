@@ -1,0 +1,20 @@
+[Unit]
+Description={{ item.name }} Node.js application service
+After=network.target
+
+[Service]
+Type=simple
+User={{ item.user }}
+Group={{ item.group }}
+
+WorkingDirectory={{ item.deploy_path }}/{{ application_current_link_name }}/{{ item.runtime.working_directory | default('build') }}
+
+ExecStart=/usr/bin/env node {{ item.runtime.entrypoint | default('bin/server.js') }}
+
+Environment=NODE_ENV=production
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

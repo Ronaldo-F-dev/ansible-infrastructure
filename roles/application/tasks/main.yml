@@ -17,6 +17,9 @@
 - name: Configure Python application services
   ansible.builtin.include_tasks: service_python.yml
 
+- name: Configure Node.js application services
+  ansible.builtin.include_tasks: service_node.yml
+
 - name: Validate Python application health
   ansible.builtin.include_tasks: health_python.yml
   loop: "{{ applications }}"
