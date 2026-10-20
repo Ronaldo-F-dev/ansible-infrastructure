@@ -4,6 +4,8 @@
     repo: "{{ item.source.repo }}"
     dest: "{{ item.deploy_path }}"
     version: "{{ item.source.version | default('main') }}"
+    key_file: "{{ item.source.ssh_key | default(omit) }}"
+    accept_hostkey: true
     update: true
   loop: "{{ applications }}"
   loop_control:
@@ -32,6 +34,8 @@
     repo: "{{ item.item.source.repo }}"
     dest: "{{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}"
     version: "{{ item.stdout }}"
+    key_file: "{{ item.item.source.ssh_key | default(omit) }}"
+    accept_hostkey: true
     update: false
   loop: "{{ application_git_revisions.results }}"
   loop_control:

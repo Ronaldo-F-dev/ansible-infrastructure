@@ -8,6 +8,9 @@
 - name: Configure Python application runtimes
   ansible.builtin.include_tasks: runtime_python.yml
 
+- name: Configure Node.js application runtimes
+  ansible.builtin.include_tasks: runtime_node.yml
+
 - name: Activate prepared application releases
   ansible.builtin.include_tasks: activate_release.yml
 

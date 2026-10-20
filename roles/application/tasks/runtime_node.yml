@@ -1,0 +1,69 @@
+---
+- name: Check installed Node.js version
+  ansible.builtin.command:
+    cmd: node --version
+  register: node_version_check
+  changed_when: false
+  failed_when: false
+  when:
+    - applications
+      | selectattr('runtime', 'defined')
+      | selectattr('runtime.type', 'defined')
+      | selectattr('runtime.type', 'equalto', 'node')
+      | list
+      | length > 0
+
+- name: Verify Node.js 22 or newer is available
+  ansible.builtin.assert:
+    that:
+      - node_version_check.rc == 0
+      - (node_version_check.stdout | regex_replace('^v', '')).split('.')[0] | int >= 22
+    fail_msg: >-
+      Node.js 22 or newer is required for Node applications.
+      Installed version: {{ node_version_check.stdout | default('not installed') }}
+    success_msg: >-
+      Compatible Node.js version detected:
+      {{ node_version_check.stdout }}
+  when:
+    - applications
+      | selectattr('runtime', 'defined')
+      | selectattr('runtime.type', 'defined')
+      | selectattr('runtime.type', 'equalto', 'node')
+      | list
+      | length > 0
+
+- name: Install Node.js dependencies for release
+  ansible.builtin.command:
+    cmd: npm ci
+    chdir: >-
+      {{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}
+  environment:
+    NODE_ENV: development
+  loop: "{{ application_git_revisions.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  register: node_dependency_installations
+  when:
+    - item.stdout is defined
+    - item.rc is defined
+    - item.rc == 0
+    - item.item.state | default('present') == 'present'
+    - item.item.runtime is defined
+    - item.item.runtime.type == 'node'
+
+- name: Build Node.js application release
+  ansible.builtin.command:
+    cmd: npm run build
+    chdir: >-
+      {{ item.item.deploy_path }}/{{ application_releases_dir_name }}/{{ item.stdout }}
+  loop: "{{ application_git_revisions.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  register: node_build_results
+  when:
+    - item.stdout is defined
+    - item.rc is defined
+    - item.rc == 0
+    - item.item.state | default('present') == 'present'
+    - item.item.runtime is defined
+    - item.item.runtime.type == 'node'
