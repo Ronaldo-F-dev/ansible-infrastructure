@@ -1,48 +1,10 @@
 ---
-- name: Read active application release
-  ansible.builtin.command:
-    cmd: "readlink -f {{ item.deploy_path }}/{{ application_current_link_name }}"
+- name: Clean releases for each application
+  ansible.builtin.include_tasks: cleanup_release_app.yml
   loop: "{{ applications }}"
   loop_control:
-    label: "{{ item.name }}"
-  register: application_active_releases
-  changed_when: false
-  failed_when: false
+    loop_var: application
+    label: "{{ application.name }}"
   when:
-    - item.state | default('present') == 'present'
-
-- name: Find application release directories
-  ansible.builtin.find:
-    paths: "{{ item.deploy_path }}/{{ application_releases_dir_name }}"
-    file_type: directory
-    recurse: false
-  loop: "{{ applications }}"
-  loop_control:
-    label: "{{ item.name }}"
-  register: application_release_directories
-  when:
-    - item.state | default('present') == 'present'
-
-- name: Build release cleanup candidates
-  ansible.builtin.set_fact:
-    application_releases_to_remove: >-
-      {{
-        (
-          application_release_directories.results[0].files
-          | rejectattr(
-              'path',
-              'equalto',
-              application_active_releases.results[0].stdout
-            )
-          | sort(attribute='mtime', reverse=true)
-          | list
-        )[(application_releases_to_keep | int - 1):]
-      }}
-
-- name: Remove old application releases
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    state: absent
-  loop: "{{ application_releases_to_remove }}"
-  loop_control:
-    label: "{{ item.path }}"
+    - application.state | default('present') == 'present'
+    - application_releases_to_keep | int > 0

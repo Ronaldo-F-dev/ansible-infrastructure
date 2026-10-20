@@ -1,0 +1,39 @@
+---
+- name: Read active release for application
+  ansible.builtin.command:
+    cmd: "readlink -f {{ application.deploy_path }}/{{ application_current_link_name }}"
+  register: application_active_release
+  changed_when: false
+  failed_when: false
+
+- name: Find releases for application
+  ansible.builtin.find:
+    paths: "{{ application.deploy_path }}/{{ application_releases_dir_name }}"
+    file_type: directory
+    recurse: false
+  register: application_found_releases
+
+- name: Build cleanup candidates for application
+  ansible.builtin.set_fact:
+    application_releases_to_remove: >-
+      {{
+        (
+          application_found_releases.files
+          | rejectattr(
+              'path',
+              'equalto',
+              application_active_release.stdout
+            )
+          | sort(attribute='mtime', reverse=true)
+          | list
+        )[(application_releases_to_keep | int - 1):]
+      }}
+
+- name: Remove old releases for application
+  ansible.builtin.file:
+    path: "{{ release.path }}"
+    state: absent
+  loop: "{{ application_releases_to_remove }}"
+  loop_control:
+    loop_var: release
+    label: "{{ release.path }}"
